@@ -133,8 +133,9 @@ class YadonPet(QWidget):
                     painter.fillRect(draw_x, draw_y, pixel_size, pixel_size, color)
         
         # Draw PID below Yadon with white background
-        pid_text = f"Claude:{self.claude_pid if self.claude_pid else 'N/A'}"
+        pid_text = f"{self.claude_pid if self.claude_pid else 'N/A'}"
         font = QFont(PID_FONT_FAMILY, PID_FONT_SIZE)
+        font.setBold(True)
         painter.setFont(font)
         
         # Calculate text size

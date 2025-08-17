@@ -73,27 +73,39 @@ class SpeechBubble(QWidget):
         self.follow_timer.start(50)  # Update every 50ms for smooth following
     
     def update_position(self):
-        if self.parent_widget:
+        if self.parent_widget and self.parent_widget.isVisible():
             parent_geometry = self.parent_widget.frameGeometry()
             parent_x = parent_geometry.x()
             parent_y = parent_geometry.y()
             parent_width = parent_geometry.width()
+            parent_height = parent_geometry.height()
             
             # Get screen geometry
             screen = QApplication.primaryScreen().geometry()
             
-            # Center bubble above parent with some offset
+            # Default position: above parent
             bubble_x = parent_x + (parent_width - self.width()) // 2
-            bubble_y = parent_y - self.height() - 5
+            bubble_y = parent_y - self.height() - 10
             
-            # Ensure bubble stays within screen bounds
-            if bubble_y < 0:
-                # Show below parent if no room above
-                bubble_y = parent_y + parent_geometry.height() + 5
+            # Smart positioning based on screen location
+            if bubble_y < 10:
+                # No room above, try below
+                bubble_y = parent_y + parent_height + 10
+                
+                if bubble_y + self.height() > screen.height() - 10:
+                    # No room below either, show to the side
+                    if parent_x > screen.width() // 2:
+                        # Parent on right side, show bubble on left
+                        bubble_x = parent_x - self.width() - 10
+                        bubble_y = parent_y + (parent_height - self.height()) // 2
+                    else:
+                        # Parent on left side, show bubble on right
+                        bubble_x = parent_x + parent_width + 10
+                        bubble_y = parent_y + (parent_height - self.height()) // 2
             
-            # Keep within horizontal bounds
-            bubble_x = max(0, min(bubble_x, screen.width() - self.width()))
-            bubble_y = max(0, min(bubble_y, screen.height() - self.height()))
+            # Final bounds check with margin
+            bubble_x = max(10, min(bubble_x, screen.width() - self.width() - 10))
+            bubble_y = max(10, min(bubble_y, screen.height() - self.height() - 10))
             
             self.move(bubble_x, bubble_y)
     

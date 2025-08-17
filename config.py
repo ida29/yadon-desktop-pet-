@@ -70,7 +70,7 @@ HOOK_RESPONSES = {
 # UI Constants
 PIXEL_SIZE = 4
 WINDOW_WIDTH = 16 * PIXEL_SIZE
-WINDOW_HEIGHT = 16 * PIXEL_SIZE + 12  # Extra space for PID display
+WINDOW_HEIGHT = 16 * PIXEL_SIZE + 20  # Extra space for PID display
 
 # Animation Constants
 FACE_ANIMATION_INTERVAL = 500  # milliseconds
@@ -96,7 +96,7 @@ BUBBLE_DISPLAY_TIME = 5000  # milliseconds
 BUBBLE_FONT_FAMILY = "Monaco"
 BUBBLE_FONT_SIZE = 14
 PID_FONT_FAMILY = "Arial"
-PID_FONT_SIZE = 8
+PID_FONT_SIZE = 12
 
 # Position Constants
 YADON_POSITIONS = [
