@@ -1,47 +1,47 @@
-# Yadon Desktop Pet 🦦
+# ヤドンデスクトップペット 🦦
 
-A desktop pet application featuring Yadon (Slowpoke) that monitors Claude Code processes and responds to hooks with speech bubbles.
+Claude Codeのプロセスを監視し、フック機能と連携して吹き出しを表示するヤドン（Slowpoke）のデスクトップペットアプリケーションです。
 
-## Features
+## 機能
 
-- **Pixel Art Yadon**: 16x16 pixel art sprite with animated face
-- **Claude Code Integration**: Monitors Claude Code processes and displays PID
-- **Hook Support**: Responds to Claude Code hooks with speech bubbles
-- **Auto-start**: Can be configured to start automatically on system boot (macOS)
-- **Multiple Yadon Support**: Spawns multiple Yadon instances for multiple Claude Code processes
-- **Smart Speech Bubbles**: Pokemon-style text boxes that adjust position based on screen edges
+- **ピクセルアートのヤドン**: 16x16ピクセルアートで顔がアニメーション
+- **Claude Code連携**: Claude Codeのプロセスを監視してPIDを表示
+- **フック対応**: Claude Codeのフックに反応して吹き出しを表示
+- **自動起動**: システム起動時に自動的に起動可能（macOS）
+- **複数ヤドン対応**: 複数のClaude Codeプロセスに対して複数のヤドンを生成
+- **スマート吹き出し**: ポケモンスタイルのテキストボックスが画面端で自動調整
 
-## Installation
+## インストール
 
-### Prerequisites
+### 前提条件
 
 ```bash
-# Install Python 3 and PyQt6
+# Python 3とPyQt6をインストール
 pip install PyQt6
 ```
 
-### Quick Install (macOS)
+### クイックインストール（macOS）
 
 ```bash
-# Clone the repository
+# リポジトリをクローン
 git clone https://github.com/ida29/yadon-desktop-pet-.git
 cd yadon-desktop-pet-
 
-# Run the installation script for auto-start
+# 自動起動用のインストールスクリプトを実行
 ./install.sh
 ```
 
-### Manual Run
+### 手動実行
 
 ```bash
 python3 yadon_pet.py
 ```
 
-## Claude Code Hook Integration
+## Claude Codeフック統合
 
-### Setting up hooks in Claude Code
+### Claude Codeでフックを設定
 
-Add the following to your `~/.claude/settings.json`:
+`~/.claude/settings.json`に以下を追加：
 
 ```json
 {
@@ -52,7 +52,7 @@ Add the following to your `~/.claude/settings.json`:
         "hooks": [
           {
             "type": "command",
-            "command": "~/work/yadon-desktop-pet-/hook_notify.sh"
+            "command": "/path/to/yadon-desktop-pet-/hook_notify.sh"
           }
         ]
       }
@@ -63,129 +63,128 @@ Add the following to your `~/.claude/settings.json`:
         "hooks": [
           {
             "type": "command",
-            "command": "~/work/yadon-desktop-pet-/hook_stop.sh"
+            "command": "/path/to/yadon-desktop-pet-/hook_stop.sh"
           }
         ]
       }
     ]
-  },
-  "model": "opus"
+  }
 }
 ```
 
-**Note**: Update the paths to match your installation directory.
+**注意**: `/path/to/`をインストールディレクトリの実際のパスに置き換えてください。
 
-### Available Hooks
+### 利用可能なフック
 
-- **Stop Hook** (`hook_stop.sh`): Displays "ひとやすみするやぁん" when Claude Code stops
-- **Notification Hook** (`hook_notify.sh`): Displays "びびっときたやぁん" for notifications
+- **Stopフック** (`hook_stop.sh`): Claude Codeが停止時に「ひとやすみするやぁん」を表示
+- **Notificationフック** (`hook_notify.sh`): 通知時に「びびっときたやぁん」を表示
 
-### Custom Hook Messages
+### カスタムフックメッセージ
 
-You can send custom messages to Yadon by writing to the hook file:
+フックファイルに書き込むことでヤドンにカスタムメッセージを送信できます：
 
 ```bash
-# Replace {PID} with your Claude Code process ID (shown under Yadon)
-echo "your message" > /tmp/yadon_hook_{PID}.txt
+# {PID}をClaude CodeのプロセスID（ヤドンの下に表示）に置き換え
+echo "メッセージ" > /tmp/yadon_hook_{PID}.txt
 
-# Or use a generic hook file (first Yadon will respond)
-echo "your message" > /tmp/yadon_hook.txt
+# または汎用フックファイルを使用（最初のヤドンが応答）
+echo "メッセージ" > /tmp/yadon_hook.txt
 ```
 
-## Configuration
+## 設定
 
-### Main Configuration (`config.py`)
+### メイン設定（`config.py`）
 
-- **Window Size**: 64x84 pixels (including PID display)
-- **PID Display**: Shows Claude Code process ID (font size 12, bold)
-- **Animation Interval**: Face animation every 500ms
-- **Random Actions**: Every 45-90 seconds
-- **Movement**: Slow, minimal movement (15 seconds per move, Yadon-style)
-- **Speech Bubble Duration**: 5 seconds
+- **ウィンドウサイズ**: 64x84ピクセル（PID表示込み）
+- **PID表示**: Claude CodeのプロセスIDを表示（フォントサイズ12、太字）
+- **アニメーション間隔**: 500ミリ秒ごとに顔アニメーション
+- **ランダムアクション**: 45〜90秒ごと
+- **移動**: ゆっくりした最小限の動き（移動に15秒、ヤドンらしい）
+- **吹き出し表示時間**: 5秒
 
-### Speech Bubble Features
+### 吹き出し機能
 
-- Pokemon-style text boxes with double borders
-- Automatic word wrapping for long messages
-- Smart positioning:
-  - Default: Above Yadon
-  - If no space above: Below Yadon
-  - If no vertical space: Beside Yadon (left or right based on position)
-- Different colors for hook messages (light cyan) vs normal messages (white)
-- Follows Yadon smoothly during movement
+- ポケモンスタイルのダブルボーダーテキストボックス
+- 長いメッセージの自動改行
+- スマートポジショニング：
+  - デフォルト：ヤドンの上
+  - 上に空間がない場合：ヤドンの下
+  - 縦方向に空間がない場合：ヤドンの横（位置に応じて左右）
+- フックメッセージ（ライトシアン）と通常メッセージ（白）で色分け
+- 移動中もスムーズに追従
 
-## File Structure
+## ファイル構造
 
 ```
 yadon-desktop-pet-/
-├── yadon_pet.py           # Main application
-├── config.py               # Configuration constants
-├── pixel_data.py           # Yadon sprite data
-├── speech_bubble.py        # Speech bubble widget
-├── process_monitor.py      # Claude Code process monitoring
-├── hook_handler.py         # Hook message handling
-├── hook_notify.sh          # Notification hook script
-├── hook_stop.sh           # Stop hook script
-├── com.yadon.pet.plist    # macOS LaunchAgent config
-├── install.sh             # Installation script
-└── requirements.txt       # Python dependencies
+├── yadon_pet.py           # メインアプリケーション
+├── config.py               # 設定定数
+├── pixel_data.py           # ヤドンのスプライトデータ
+├── speech_bubble.py        # 吹き出しウィジェット
+├── process_monitor.py      # Claude Codeプロセス監視
+├── hook_handler.py         # フックメッセージ処理
+├── hook_notify.sh          # 通知フックスクリプト
+├── hook_stop.sh           # 停止フックスクリプト
+├── com.yadon.pet.plist    # macOS LaunchAgent設定
+├── install.sh             # インストールスクリプト
+└── requirements.txt       # Python依存関係
 ```
 
-## Auto-start Management (macOS)
+## 自動起動管理（macOS）
 
-### Enable auto-start
+### 自動起動を有効化
 ```bash
 ./install.sh
 ```
 
-### Disable auto-start
+### 自動起動を無効化
 ```bash
 launchctl unload ~/Library/LaunchAgents/com.yadon.pet.plist
 ```
 
-### Complete removal
+### 完全削除
 ```bash
 launchctl unload ~/Library/LaunchAgents/com.yadon.pet.plist
 rm ~/Library/LaunchAgents/com.yadon.pet.plist
 ```
 
-## Troubleshooting
+## トラブルシューティング
 
-### Yadon not appearing
-- Check if the process is running: `ps aux | grep yadon_pet`
-- Check logs: `tail -f /tmp/yadon-pet.log`
-- Check error logs: `tail -f /tmp/yadon-pet-error.log`
+### ヤドンが表示されない
+- プロセスが実行中か確認：`ps aux | grep yadon_pet`
+- ログを確認：`tail -f /tmp/yadon-pet.log`
+- エラーログを確認：`tail -f /tmp/yadon-pet-error.log`
 
-### Hooks not working
-- Verify Claude Code PID: Check the number displayed under Yadon
-- Check hook debug log: `tail -f /tmp/hook_debug.log`
-- Ensure hook scripts are executable: `chmod +x hook_*.sh`
-- Verify paths in `~/.claude/settings.json` match your installation
+### フックが動作しない
+- Claude Code PIDを確認：ヤドンの下に表示される番号を確認
+- フックデバッグログを確認：`tail -f /tmp/hook_debug.log`
+- フックスクリプトが実行可能か確認：`chmod +x hook_*.sh`
+- `~/.claude/settings.json`のパスがインストール場所と一致しているか確認
 
-### Speech bubble positioning issues
-- The bubble automatically adjusts position based on screen edges
-- If Yadon is at the top, bubble appears below
-- If at the bottom, bubble appears above
-- If no vertical space, bubble appears to the side
+### 吹き出しの位置がおかしい
+- 吹き出しは画面端に基づいて自動的に位置を調整
+- ヤドンが上端にいる場合、吹き出しは下に表示
+- 下端にいる場合、吹き出しは上に表示
+- 縦方向に空間がない場合、吹き出しは横に表示
 
-### Multiple Claude Code instances
-- Each Claude Code process gets its own Yadon
-- Each Yadon displays its associated Claude Code PID
-- Hook messages are routed to the correct Yadon based on PID
+### 複数のClaude Codeインスタンス
+- 各Claude Codeプロセスに対して個別のヤドンが生成
+- 各ヤドンは関連するClaude CodeのPIDを表示
+- フックメッセージはPIDに基づいて正しいヤドンにルーティング
 
-## Debug Logs
+## デバッグログ
 
-- **Main log**: `/tmp/yadon-pet.log`
-- **Error log**: `/tmp/yadon-pet-error.log`
-- **Debug log**: `/tmp/yadon_debug.log`
-- **Hook debug**: `/tmp/hook_debug.log`
+- **メインログ**: `/tmp/yadon-pet.log`
+- **エラーログ**: `/tmp/yadon-pet-error.log`
+- **デバッグログ**: `/tmp/yadon_debug.log`
+- **フックデバッグ**: `/tmp/hook_debug.log`
 
-## License
+## ライセンス
 
 MIT License
 
-## Credits
+## クレジット
 
-Created with Claude Code - A pixel art Yadon companion for your Claude Code sessions!
+Claude Codeで作成 - Claude Codeセッションのためのピクセルアートヤドンコンパニオン！
 
 やぁん 🦥
