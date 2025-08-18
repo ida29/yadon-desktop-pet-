@@ -15,7 +15,7 @@ from config import (
     CLAUDE_CHECK_INTERVAL, HOOK_CHECK_INTERVAL, MOVEMENT_DURATION,
     TINY_MOVEMENT_RANGE, SMALL_MOVEMENT_RANGE, TINY_MOVEMENT_PROBABILITY,
     BUBBLE_DISPLAY_TIME, PID_FONT_FAMILY, PID_FONT_SIZE,
-    YADON_POSITIONS, VARIANT_ORDER, MAX_YADON_COUNT
+    VARIANT_ORDER, MAX_YADON_COUNT
 )
 from speech_bubble import SpeechBubble
 from process_monitor import ProcessMonitor, count_claude_processes, get_claude_pids, find_claude_pid
@@ -49,6 +49,23 @@ class YadonPet(QWidget):
         self.setup_random_actions()
         self.setup_claude_code_monitor()
     
+    def closeEvent(self, event):
+        """Clean up when closing the widget"""
+        # Clean up bubble
+        if self.bubble:
+            self.bubble.close()
+            self.bubble = None
+        # Stop all timers
+        if hasattr(self, 'timer'):
+            self.timer.stop()
+        if hasattr(self, 'action_timer'):
+            self.action_timer.stop()
+        if hasattr(self, 'monitor_timer'):
+            self.monitor_timer.stop()
+        if hasattr(self, 'hook_timer'):
+            self.hook_timer.stop()
+        super().closeEvent(event)
+    
     def init_ui(self):
         self.setWindowTitle('Yadon Desktop Pet')
         self.setFixedSize(WINDOW_WIDTH, WINDOW_HEIGHT)  # Add space for PID display
@@ -60,12 +77,7 @@ class YadonPet(QWidget):
             Qt.WindowType.X11BypassWindowManagerHint
         )
         
-        # Set random initial position
-        screen = QApplication.primaryScreen().geometry()
-        initial_x = random.randint(50, screen.width() - self.width() - 50)
-        initial_y = random.randint(50, screen.height() - self.height() - 50)
-        self.move(initial_x, initial_y)
-        
+        # Don't set position here - it will be set in main()
         self.show()
         self.raise_()
         self.activateWindow()
@@ -211,13 +223,18 @@ class YadonPet(QWidget):
     def show_message(self):
         if self.bubble:
             self.bubble.close()
+            self.bubble = None
         
         message = random.choice(RANDOM_MESSAGES)
         self.bubble = SpeechBubble(message, self, bubble_type='normal')  # Normal bubble
         self.bubble.show()
         
         # Hide bubble after 5 seconds
-        QTimer.singleShot(BUBBLE_DISPLAY_TIME, lambda: self.bubble.close() if self.bubble else None)
+        def close_bubble():
+            if self.bubble:
+                self.bubble.close()
+                self.bubble = None
+        QTimer.singleShot(BUBBLE_DISPLAY_TIME, close_bubble)
     
     def moveEvent(self, event):
         """Update bubble position when Yadon moves"""
@@ -262,9 +279,14 @@ class YadonPet(QWidget):
             bubble_type, message = result
             if self.bubble:
                 self.bubble.close()
+                self.bubble = None
             self.bubble = SpeechBubble(message, self, bubble_type=bubble_type)
             self.bubble.show()
-            QTimer.singleShot(BUBBLE_DISPLAY_TIME, lambda: self.bubble.close() if self.bubble else None)
+            def close_bubble():
+                if self.bubble:
+                    self.bubble.close()
+                    self.bubble = None
+            QTimer.singleShot(BUBBLE_DISPLAY_TIME, close_bubble)
     
     
     def show_welcome_message(self):
@@ -272,17 +294,28 @@ class YadonPet(QWidget):
         message = random.choice(WELCOME_MESSAGES)
         if self.bubble:
             self.bubble.close()
+            self.bubble = None
         self.bubble = SpeechBubble(message, self, bubble_type='normal')  # Normal bubble
         self.bubble.show()
-        QTimer.singleShot(BUBBLE_DISPLAY_TIME, lambda: self.bubble.close() if self.bubble else None)
+        def close_bubble():
+            if self.bubble:
+                self.bubble.close()
+                self.bubble = None
+        QTimer.singleShot(BUBBLE_DISPLAY_TIME, close_bubble)
     
     def show_goodbye_message(self):
         """Show message when Claude Code stops"""
         message = random.choice(GOODBYE_MESSAGES)
         if self.bubble:
             self.bubble.close()
+            self.bubble = None
         self.bubble = SpeechBubble(message, self, bubble_type='normal')  # Normal bubble
         self.bubble.show()
+        def close_bubble():
+            if self.bubble:
+                self.bubble.close()
+                self.bubble = None
+        QTimer.singleShot(BUBBLE_DISPLAY_TIME, close_bubble)
 
 
 def signal_handler(sig, frame):
@@ -310,23 +343,27 @@ def main():
     num_pets = min(claude_count, MAX_YADON_COUNT) if claude_count > 0 else 1
     
     screen = QApplication.primaryScreen().geometry()
-    positions = [
-        (int(YADON_POSITIONS[i][0] * screen.width()),
-         int(YADON_POSITIONS[i][1] * screen.height()))
-        for i in range(len(YADON_POSITIONS))
-    ]
     
     # Get Claude process PIDs (actual claude processes only)
     claude_pids = get_claude_pids()
     
+    # Calculate positions for bottom-right alignment
+    # Stack them horizontally from right to left at the bottom
+    margin = 20  # Margin from screen edges
+    spacing = 10  # Space between Yadons
+    
     for i in range(num_pets):
         # Pass specific Claude PID to each Yadon
         claude_pid = claude_pids[i] if i < len(claude_pids) else None
-        variant = VARIANT_ORDER[i % len(VARIANT_ORDER)]  # Cycle through variants
+        # Randomly select variant with equal probability
+        variant = random.choice(VARIANT_ORDER)
         pet = YadonPet(claude_pid=claude_pid, variant=variant)
-        if i < len(positions):
-            pet.move(positions[i][0] - pet.width() // 2, 
-                    positions[i][1] - pet.height() // 2)
+        
+        # Position in bottom-right, stacking from right to left
+        x_pos = screen.width() - margin - (WINDOW_WIDTH + spacing) * (i + 1)
+        y_pos = screen.height() - margin - WINDOW_HEIGHT
+        pet.move(x_pos, y_pos)
+        
         pets.append(pet)
     
     # Monitor for changes in Claude Code processes

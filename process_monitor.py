@@ -4,7 +4,7 @@ import subprocess
 from PyQt6.QtCore import QTimer
 from PyQt6.QtWidgets import QApplication
 
-from config import YADON_POSITIONS, VARIANT_ORDER, MAX_YADON_COUNT
+from config import VARIANT_ORDER, MAX_YADON_COUNT
 
 
 class ProcessMonitor(QTimer):
@@ -25,11 +25,10 @@ class ProcessMonitor(QTimer):
             if current_count > self.last_count:
                 # Add more Yadons
                 screen = QApplication.primaryScreen().geometry()
-                positions = [
-                    (int(YADON_POSITIONS[i][0] * screen.width()),
-                     int(YADON_POSITIONS[i][1] * screen.height()))
-                    for i in range(len(YADON_POSITIONS))
-                ]
+                
+                # Calculate positions for bottom-right alignment
+                margin = 20  # Margin from screen edges
+                spacing = 10  # Space between Yadons
                 
                 # Get current Claude PIDs (actual claude processes only)
                 claude_pids = get_claude_pids()
@@ -37,20 +36,40 @@ class ProcessMonitor(QTimer):
                 for i in range(self.last_count, current_count):
                     # Import here to avoid circular import
                     from yadon_pet import YadonPet
+                    import random
                     
                     claude_pid = claude_pids[i] if i < len(claude_pids) else None
-                    variant = VARIANT_ORDER[i % len(VARIANT_ORDER)]  # Cycle through variants
+                    # Randomly select variant with equal probability
+                    variant = random.choice(VARIANT_ORDER)
                     pet = YadonPet(claude_pid=claude_pid, variant=variant)
-                    if i < len(positions):
-                        pet.move(positions[i][0] - pet.width() // 2,
-                                positions[i][1] - pet.height() // 2)
+                    
+                    # Position in bottom-right, stacking from right to left
+                    from config import WINDOW_WIDTH, WINDOW_HEIGHT
+                    x_pos = screen.width() - margin - (WINDOW_WIDTH + spacing) * (len(self.pets) + 1)
+                    y_pos = screen.height() - margin - WINDOW_HEIGHT
+                    pet.move(x_pos, y_pos)
+                    
                     self.pets.append(pet)
                     pet.show()
             elif current_count < self.last_count:
-                # Remove excess Yadons
+                # Remove excess Yadons - properly clean up
                 while len(self.pets) > max(current_count, 0):
                     pet = self.pets.pop()
+                    # Close any open speech bubbles first
+                    if hasattr(pet, 'bubble') and pet.bubble:
+                        pet.bubble.close()
+                    # Stop all timers
+                    if hasattr(pet, 'timer'):
+                        pet.timer.stop()
+                    if hasattr(pet, 'action_timer'):
+                        pet.action_timer.stop()
+                    if hasattr(pet, 'monitor_timer'):
+                        pet.monitor_timer.stop()
+                    if hasattr(pet, 'hook_timer'):
+                        pet.hook_timer.stop()
+                    # Close the widget
                     pet.close()
+                    pet.deleteLater()  # Ensure proper cleanup
             
             self.last_count = current_count
 
@@ -68,8 +87,12 @@ def count_claude_processes():
                 # Look for the actual claude binary process
                 parts = line.split()
                 # Check if the command is just "claude" (not a path or other command)
-                if len(parts) > 10 and parts[10] == 'claude':
-                    claude_count += 1
+                # The command may be at different column positions depending on process state
+                if len(parts) > 10:
+                    command_start = 10
+                    # Check if it's actually the claude binary
+                    if parts[command_start] == 'claude' or (len(parts) > 11 and parts[11] == 'claude'):
+                        claude_count += 1
         return claude_count
     except Exception:
         return 0
@@ -85,8 +108,13 @@ def get_claude_pids():
             if 'claude' in line and 'yadon' not in line and 'node' not in line and 'grep' not in line:
                 parts = line.split()
                 # Check if the command is just "claude" (actual claude process)
-                if len(parts) > 10 and parts[10] == 'claude':
-                    claude_pids.append(parts[1])  # PID is second column
+                # The command may be at different column positions depending on process state
+                if len(parts) > 10:
+                    # Find where the command starts (after process state columns)
+                    command_start = 10
+                    # Check if it's actually the claude binary
+                    if parts[command_start] == 'claude' or (len(parts) > 11 and parts[11] == 'claude'):
+                        claude_pids.append(parts[1])  # PID is second column
         return claude_pids
     except Exception:
         return []

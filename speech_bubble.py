@@ -73,45 +73,51 @@ class SpeechBubble(QWidget):
         self.follow_timer.start(50)  # Update every 50ms for smooth following
     
     def update_position(self):
-        if self.parent_widget and self.parent_widget.isVisible():
-            parent_geometry = self.parent_widget.frameGeometry()
-            parent_x = parent_geometry.x()
-            parent_y = parent_geometry.y()
-            parent_width = parent_geometry.width()
-            parent_height = parent_geometry.height()
+        if not self.parent_widget or not self.parent_widget.isVisible():
+            # Parent widget is gone, close the bubble
+            self.close()
+            return
             
-            # Get screen geometry
-            screen = QApplication.primaryScreen().geometry()
+        parent_geometry = self.parent_widget.frameGeometry()
+        parent_x = parent_geometry.x()
+        parent_y = parent_geometry.y()
+        parent_width = parent_geometry.width()
+        parent_height = parent_geometry.height()
+        
+        # Get screen geometry
+        screen = QApplication.primaryScreen().geometry()
+        
+        # Default position: above parent
+        bubble_x = parent_x + (parent_width - self.width()) // 2
+        bubble_y = parent_y - self.height() - 10
+        
+        # Smart positioning based on screen location
+        if bubble_y < 10:
+            # No room above, try below
+            bubble_y = parent_y + parent_height + 10
             
-            # Default position: above parent
-            bubble_x = parent_x + (parent_width - self.width()) // 2
-            bubble_y = parent_y - self.height() - 10
-            
-            # Smart positioning based on screen location
-            if bubble_y < 10:
-                # No room above, try below
-                bubble_y = parent_y + parent_height + 10
-                
-                if bubble_y + self.height() > screen.height() - 10:
-                    # No room below either, show to the side
-                    if parent_x > screen.width() // 2:
-                        # Parent on right side, show bubble on left
-                        bubble_x = parent_x - self.width() - 10
-                        bubble_y = parent_y + (parent_height - self.height()) // 2
-                    else:
-                        # Parent on left side, show bubble on right
-                        bubble_x = parent_x + parent_width + 10
-                        bubble_y = parent_y + (parent_height - self.height()) // 2
-            
-            # Final bounds check with margin
-            bubble_x = max(10, min(bubble_x, screen.width() - self.width() - 10))
-            bubble_y = max(10, min(bubble_y, screen.height() - self.height() - 10))
-            
-            self.move(bubble_x, bubble_y)
+            if bubble_y + self.height() > screen.height() - 10:
+                # No room below either, show to the side
+                if parent_x > screen.width() // 2:
+                    # Parent on right side, show bubble on left
+                    bubble_x = parent_x - self.width() - 10
+                    bubble_y = parent_y + (parent_height - self.height()) // 2
+                else:
+                    # Parent on left side, show bubble on right
+                    bubble_x = parent_x + parent_width + 10
+                    bubble_y = parent_y + (parent_height - self.height()) // 2
+        
+        # Final bounds check with margin
+        bubble_x = max(10, min(bubble_x, screen.width() - self.width() - 10))
+        bubble_y = max(10, min(bubble_y, screen.height() - self.height() - 10))
+        
+        self.move(bubble_x, bubble_y)
     
     def close(self):
-        if self.follow_timer:
+        if hasattr(self, 'follow_timer') and self.follow_timer:
             self.follow_timer.stop()
+            self.follow_timer = None
+        self.parent_widget = None  # Clear parent reference
         super().close()
     
     def paintEvent(self, event):
