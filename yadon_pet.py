@@ -44,6 +44,9 @@ class YadonPet(QWidget):
         # Hook handler
         self.hook_handler = HookHandler(self.claude_pid)
         
+        # Track PID for updates
+        self.previous_pid = self.claude_pid
+        
         self.init_ui()
         self.setup_animation()
         self.setup_random_actions()
@@ -246,6 +249,11 @@ class YadonPet(QWidget):
     def check_claude_code(self):
         """Check if Claude Code is running"""
         try:
+            # Check if PID changed and update hook handler
+            if self.claude_pid != self.previous_pid:
+                self.previous_pid = self.claude_pid
+                self.hook_handler.claude_pid = self.claude_pid
+            
             # Check for Claude Code process (actual claude, not yadon)
             result = subprocess.run(['ps', 'aux'], capture_output=True, text=True)
             lines = result.stdout.strip().split('\n')

@@ -20,6 +20,19 @@ class ProcessMonitor(QTimer):
         current_count = count_claude_processes()
         current_count = min(current_count, MAX_YADON_COUNT) if current_count > 0 else 0
         
+        # Always update PIDs for existing Yadons
+        claude_pids = get_claude_pids()
+        for i, pet in enumerate(self.pets):
+            if i < len(claude_pids):
+                new_pid = claude_pids[i]
+                if pet.claude_pid != new_pid:
+                    # Update PID if it changed
+                    pet.claude_pid = new_pid
+                    # Also update hook handler with new PID
+                    if hasattr(pet, 'hook_handler'):
+                        pet.hook_handler.claude_pid = new_pid
+                    pet.update()  # Trigger redraw to show new PID
+        
         if current_count != self.last_count:
             # Process count changed, update Yadon instances
             if current_count > self.last_count:
@@ -30,8 +43,8 @@ class ProcessMonitor(QTimer):
                 margin = 20  # Margin from screen edges
                 spacing = 10  # Space between Yadons
                 
-                # Get current Claude PIDs (actual claude processes only)
-                claude_pids = get_claude_pids()
+                # Already got PIDs above, reuse them
+                # claude_pids = get_claude_pids()
                 
                 for i in range(self.last_count, current_count):
                     # Import here to avoid circular import
