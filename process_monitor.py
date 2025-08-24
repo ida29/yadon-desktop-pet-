@@ -32,6 +32,11 @@ class ProcessMonitor(QTimer):
                     if hasattr(pet, 'hook_handler'):
                         pet.hook_handler.claude_pid = new_pid
                     pet.update()  # Trigger redraw to show new PID
+            else:
+                # No corresponding Claude process for this Yadon
+                # Hide it immediately to prevent showing N/A
+                if pet.isVisible():
+                    pet.hide()
         
         if current_count != self.last_count:
             # Process count changed, update Yadon instances
@@ -80,6 +85,8 @@ class ProcessMonitor(QTimer):
                         pet.monitor_timer.stop()
                     if hasattr(pet, 'hook_timer'):
                         pet.hook_timer.stop()
+                    # Hide immediately before closing to prevent N/A display
+                    pet.hide()
                     # Close the widget
                     pet.close()
                     pet.deleteLater()  # Ensure proper cleanup

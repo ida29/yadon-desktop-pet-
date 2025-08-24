@@ -272,8 +272,8 @@ class YadonPet(QWidget):
                 # Claude Code stopped
                 self.claude_code_active = False
                 self.show_goodbye_message()
-                # Don't hide when Claude Code stops
-                # QTimer.singleShot(5000, self.hide)  # Hide after goodbye message
+                # Hide after goodbye message to prevent showing N/A
+                QTimer.singleShot(BUBBLE_DISPLAY_TIME, self.hide)
             
             # Hook messages are now checked by separate timer
                 
